@@ -61,6 +61,37 @@
             sexp)
         (subst new old sexp))))
 
+(define number-element-from
+  (lambda (lst n)
+    (if (null? lst)
+        '()
+        (cons (list n (car lst))
+              (number-element-from (cdr lst) (+ n 1))))))
+(define number-elements
+  (lambda (lst)
+    (number-elements-from lst 0)))
+
+(define list-sum
+  (lambda (loi)
+    (if (null? loi)
+        0
+        (+ (car loi)
+           (list-sum (cdr loi))))))
+
+(define partial-vector-sum
+  (lambda (v n)
+    (if (zero? n)
+        (vector-ref v 0)
+        (+ (vector-ref v n)
+           (partial-vector-sum v (- n 1))))))
+
+(define vector-sum
+  (lambda (v)
+    (let ((n (vector-length v)))
+      (if (zero? n)
+          0
+          (partial-vector-sum v (- n 1))))))
+
 
 
 
