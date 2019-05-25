@@ -1,0 +1,1 @@
+("7.3" racket ("d735afbd3c56eecc3d448ebc2370e03b77f42efe" . "3fde78a55139e09ae159c9911c083bc6f1109275") #"/home/jwx/eopl/chapter1/../libs/tools.scm" (collects #"errortrace" #"errortrace-key.rkt") (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))
