@@ -2,6 +2,8 @@
 
 (require "./1.31.scm")
 
+; use Yukang's answer
+
 (define number-leaves
   (lambda (btree)
     (let ((n -1))
