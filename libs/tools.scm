@@ -10,5 +10,4 @@
         s2
         (cons (car s1) (append (cdr s1) s2)))))
 
-
 (provide atom? append)
