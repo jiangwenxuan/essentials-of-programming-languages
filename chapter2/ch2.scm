@@ -66,8 +66,9 @@
 
 ; empty-env : () -> env
 (define empty-env
-  (lambda (search-var)
-    (report-no-binding-found search-var)))
+  (lambda ()
+    (lambda (search-var)
+      (report-no-binding-found search-var))))
 
 ; extend-env : var * scheme-val * env -> env
 (define extend-env
@@ -86,7 +87,7 @@
   (extend-env 'a 1
               (extend-env 'b '2
                           (extend-env 'c 3
-                                      empty-env))))
+                                      (empty-env)))))
 ;(display (apply-env env1 'c))
 ;(newline)
 ;(display (apply-env env1 'd))
