@@ -20,7 +20,7 @@
 ; var-exp? : lc-exp -> bool
 (define var-exp?
   (lambda (exp)
-    (and (pair? x) (eqv? (car x) 'var-exp))))
+    (and (pair? exp) (eqv? (car exp) 'var-exp))))
 
 ; lambda-exp? : lc-exp -> bool
 (define lambda-exp?
@@ -69,3 +69,10 @@
        (or
         (occurs-free? search-var (app-exp->rator exp))
         (occurs-free? search-var (app-exp->rand exp)))))))
+
+(define exp-test (lambda-exp 'a
+                             (app-exp (var-exp 'b) (var-exp 'a))))
+
+(display (occurs-free? 'a exp-test))
+(newline)
+(display (occurs-free? 'b exp-test))
