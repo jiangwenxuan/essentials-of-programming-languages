@@ -93,6 +93,19 @@
 ;(display (apply-env env1 'd))
 
 
+; interfaces for recursive data types
+(define occurs-free?
+  (lambda (search-var exp)
+    (cond
+      ((var-exp? exp)
+       (eqv? search-var (var-exp->var exp)))
+      ((lambda-exp? exp)
+       (and (not (eqv? search-var (lambda-exp->bound-var exp)))
+            (occurs-free? search-var (lambda-exp->body exp))))
+      (else
+       (or (occurs-free? search-var (app-exp->rator exp))
+           (occurs-free? search-var (app-exp->rand exp)))))))
+
 
 
 

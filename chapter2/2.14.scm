@@ -57,32 +57,4 @@
 (newline)
 (display (has-binding? e 'e))
 (newline)
-(display (empty-env? e))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                
+(display (empty-env? e))              
