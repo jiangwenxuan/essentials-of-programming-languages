@@ -39,10 +39,9 @@
               (eopl:error 'parser "bound-vars of lambda expression must be list"))
              (else
               (lambda-exp (cadr exp)
-                          (parser (caddr exp))))))
-       (app-exp
-        (parser (car exp))
-        (map parser (cdr exp))))
+                          (parser (caddr exp)))))
+           (app-exp
+            (parser (car exp))
+            (map parser (cdr exp)))))
       (else
-       (eopl:error "wrong concrete syntax")))))
-           
+       (eopl:error 'parser "wrong concrete syntax")))))
