@@ -22,6 +22,11 @@
     (eopl:error 'apply-env "no binding for: ~s" search-var)))
 
 ; syntax data types for the LET language
+
+(define identifier?
+  (lambda (x)
+    (and (symbol? x) (not (eqv? x 'lambda)))))
+
 (define-datatype program program?
   [a-program (exp1 expression?)])
 
