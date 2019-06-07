@@ -1,6 +1,13 @@
 #lang eopl
 
-; use env representation as functional representation
+; let language
+; 1. diff-exp:  - (x , y)
+; 2. if-exp: if exp then exp else exp
+; 3. zero?-exp: zero? (exp)
+; 4. let-exp: let id exp in exp
+
+
+; use functional representation to represent env
 (define empty-env
   (lambda ()
     (lambda (search-var)
@@ -21,11 +28,16 @@
   (lambda (search-var)
     (eopl:error 'apply-env "no binding for: ~s" search-var)))
 
-; syntax data types for the LET language
 
+
+; syntax data types for the LET language, scan&parse
+
+; instead of symbol?, use identifier?
 (define identifier?
   (lambda (x)
-    (and (symbol? x) (not (eqv? x 'lambda)))))
+    (and (symbol? x)
+         (not (eqv? x 'lambda))
+         (not (eqv? x 'define)))))
 
 (define-datatype program program?
   [a-program (exp1 expression?)])
@@ -43,6 +55,26 @@
            (exp1 expression?)
            (body expression?)])
 
+(define lex-a
+  '((whitespace (whitespace) skip)
+    (commit ("%" (arbno (not #\newline))) skip)
+    (identifier (letter (arbno (or letter digit))) symbol)
+    (number (digit (arbno digit)) number)))
+
+(define grammar-let
+  '((program (expression) a-program)
+    (expression (number) const-exp)
+    (expression (identifier) var-exp)
+    (expression ("-" "(" expression "," expression ")") diff-exp)
+    (expression ("zero?" "(" expression ")") zero?-exp)
+    (expression ("if" expression "then" expression "else" expression) if-exp)
+    (expression ("let" identifier expression "in" expression) let-exp)))
+
+;(sllgen:show-define-datatypes lex-a grammar-let)
+(define scan&parse (sllgen:make-string-parser lex-a grammar-let))
+
+
+ 
 (define init-env
   (lambda ()
     (extend-env
@@ -108,3 +140,5 @@
       (let-exp (var exp1 body)
                (let ([val1 (value-of exp1 env)])
                  (value-of body (extend-env var val1 env)))))))
+
+(display (run "- (6, i)"))
