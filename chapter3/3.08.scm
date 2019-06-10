@@ -39,6 +39,12 @@
 (define-datatype expression expression?
   [const-exp (exp1 number?)]
   [var-exp (var identifier?)]
+  [equal?-exp (exp1 expression?)
+              (exp2 expression?)]
+  [greater?-exp (exp1 expression?)
+                (exp2 expression?)]
+  [less?-exp (exp1 expression?)
+             (exp2 expression?)]
   [diff-exp (exp1 expression?)
             (exp2 expression?)]
   [minus-exp (exp1 expression?)]
@@ -66,6 +72,9 @@
   '((program (expression) a-program)
     (expression (number) const-exp)
     (expression (identifier) var-exp)
+    (expression ("equal?" "(" expression "," expression ")") equal?-exp)
+    (expression ("greater?" "(" expression "," expression ")") greater?-exp)
+    (expression ("less?" "(" expression "," expression ")") less?-exp)
     (expression ("minus" "(" expression ")") minus-exp)
     (expression ("-" "(" expression "," expression ")") diff-exp)
     (expression ("+" "(" expression "," expression ")") add-exp)
@@ -113,6 +122,30 @@
     (cases expression exp
       (const-exp (num) (num-val num))
       (var-exp (var) (apply-env env var))
+      (equal?-exp (exp1 exp2)
+                  (let ([val1 (value-of exp1 env)]
+                        [val2 (value-of exp2 env)])
+                    (let ([num1 (expval->num val1)]
+                          [num2 (expval->num val2)])
+                      (if (eq? num1 num2)
+                          (bool-val #t)
+                          (bool-val #f)))))
+      (greater?-exp (exp1 exp2)
+                    (let ([val1 (value-of exp1 env)]
+                          [val2 (value-of exp2 env)])
+                      (let ([num1 (expval->num val1)]
+                            [num2 (expval->num val2)])
+                        (if (> num1 num2)
+                            (bool-val #t)
+                            (bool-val #f)))))
+      (less?-exp (exp1 exp2)
+                 (let ([val1 (value-of exp1 env)]
+                       [val2 (value-of exp2 env)])
+                   (let ([num1 (expval->num val1)]
+                         [num2 (expval->num val2)])
+                     (if (< num1 num2)
+                         (bool-val #t)
+                         (bool-val #f)))))
       (minus-exp (num) (num-val (- (expval->num (value-of num env)))))
       (add-exp (exp1 exp2)
                (let ([val1 (value-of exp1 env)]
@@ -154,8 +187,8 @@
                  (value-of body (extend-env id val1 env)))))))
  
 (define s1 "+(i, minus(j))")
-(define s2 "let x 9 in *(x, minus(i))")
-(define s3 "let x 0 in if zero?(0) then minus(8) else minus(i)")
+(define s2 "let x 0 in if zero?(0) then minus(8) else minus(i)")
+(define s3 "let a 9 in let b 10 in if greater?(a, b) then *(a, b) else -(a, b)") 
 
 (display (run s1))
 (newline)

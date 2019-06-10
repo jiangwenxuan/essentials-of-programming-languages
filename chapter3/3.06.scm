@@ -130,6 +130,6 @@
 (define s1 "-(i, minus(j))")
 (define s2 "let x 9 in -(x, minus(k))")
 
-(display (run s1))
+(display (scan&parse s1))
 (newline)
 (display (run s2))
