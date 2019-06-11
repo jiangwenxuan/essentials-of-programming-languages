@@ -48,3 +48,9 @@
 (define l "list(1, 2, 3, 4, 5)")
 
 (define a (run l))
+
+(display a)
+(newline)
+(display (car a))
+(newline)
+(display (cdr a))
