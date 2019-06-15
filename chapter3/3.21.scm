@@ -8,6 +8,16 @@
   (lambda (saved-var saved-val saved-env)
     (cons (cons saved-var saved-val) saved-env)))
 
+(define extend-env-list
+  (lambda (saved-vars saved-vals saved-env)
+    (if (null? saved-vars)
+        saved-env
+        (cons (cons (car saved-vars)
+                    (car saved-vals))
+              (extend-env-list (cdr saved-vars)
+                               (cdr saved-vals)
+                               saved-env)))))
+
 (define apply-env
   (lambda (env search-var)
     (if (empty-env? env)
@@ -36,6 +46,14 @@
          (not (eqv? x 'lambda))
          (not (eqv? x 'define)))))
 
+(define list-of
+  (lambda (pred)
+    (lambda (x)
+      (or (null? x)
+          (and (pair? x)
+               (pred (car x))
+               ((list-of pred) (cdr x)))))))
+
 ; syntax data types for the LET language, scan&parse
 
 (define lex-a
@@ -52,8 +70,9 @@
     (expression ("zero?" "(" expression ")") zero?-exp)
     (expression ("if" expression "then" expression "else" expression) if-exp)
     (expression ("let" identifier "=" expression "in" expression) let-exp)
-    (expression ("proc" "(" identifier ")" expression) proc-exp)
-    (expression ("(" expression expression ")") call-exp)))
+    (expression ("proc" "(" (separated-list identifier ",") ")" expression) proc-exp)
+    (expression ("(" expression (arbno expression) ")") call-exp)
+    (expression ("letproc" identifier "=" "(" identifier ")" expression "in" expression) letproc-exp)))
 
 ;(sllgen:show-define-datatypes lex-a grammar-let)
 (define scan&parse (sllgen:make-string-parser lex-a grammar-let))
@@ -74,21 +93,19 @@
   [let-exp (var identifier?)
            (exp1 expression?)
            (body expression?)]
-  [proc-exp (var identifier?)
+  [proc-exp (vars (list-of identifier?))
             (body expression?)]
   [call-exp (rator expression?)
-            (rand expression?)])
+            (rand (list-of expression?))]
+  [letproc-exp (proc-name identifier?)
+               (args identifier?)
+               (body1 expression?)
+               (body2 expression?)])
 
 (define-datatype proc proc?
-  [procedure (var identifier?)
+  [procedure (var (list-of identifier?))
              (body expression?)
              (saved-env environment?)])
-
-(define apply-procedure
-  (lambda (proc1 val)
-    (cases proc proc1
-      (procedure (var body saved-env)
-                 (value-of body (extend-env var val saved-env))))))
 
 (define-datatype expval expval?
   [num-val (num number?)]
@@ -152,15 +169,42 @@
       (let-exp (var exp1 body)
                (let ([val1 (value-of exp1 env)])
                  (value-of body (extend-env var val1 env))))
-      (proc-exp (var body)
-                (proc-val (procedure var body env)))
-      (call-exp (rator rand)
+      (proc-exp (vars body)
+                (proc-val (procedure vars body env)))
+      (call-exp (rator rands)
                 (let ([proc (expval->proc (value-of rator env))]
-                      [arg (value-of rand env)])
-                  (apply-procedure proc arg))))))
+                      [arg (args-cal rands env)])
+                  (apply-procedure proc arg)))
+      (letproc-exp (proc-name id body1 body2)
+                   (let ([val (proc-val (procedure (cons id '()) body1 env))])
+                     (value-of body2 (extend-env proc-name val env)))))))
 
+(define args-cal
+  (lambda (rands env)
+    (if (null? rands)
+        '()
+        (cons (value-of (car rands) env)
+              (args-cal (cdr rands) env)))))
+
+(define apply-procedure
+  (lambda (proc1 vals)
+    (cases proc proc1
+      (procedure (vars body saved-env)
+                 (value-of body (extend-env-list vars vals saved-env))))))
+
+    
 (define l1 "-(6, i)")
 (define l2 "let x = 200 in let f = proc (z) -(z, x) in let x = 100 in let g = proc (z) -(z, x) in -((f 1), (g 1))")
+(define l3 "letproc f = (z) -(z, 1) in (f 2)")
+(define l4 "let f = proc (x) proc (y) -(x, -(0, y)) in ((f 10) 20)")
+(define l5 "let f = proc (x, y) -(-(x, 1), -(y, 3)) in (f 3 4)")
+
 (display (run l1))
 (newline)
 (display (run l2))
+(newline)
+(display (run l3))
+(newline)
+(display (run l4))
+(newline)
+(display (run l5))

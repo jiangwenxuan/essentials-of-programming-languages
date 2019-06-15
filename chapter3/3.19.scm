@@ -53,7 +53,8 @@
     (expression ("if" expression "then" expression "else" expression) if-exp)
     (expression ("let" identifier "=" expression "in" expression) let-exp)
     (expression ("proc" "(" identifier ")" expression) proc-exp)
-    (expression ("(" expression expression ")") call-exp)))
+    (expression ("(" expression expression ")") call-exp)
+    (expression ("letproc" identifier "=" "(" identifier ")" expression "in" expression) letproc-exp)))
 
 ;(sllgen:show-define-datatypes lex-a grammar-let)
 (define scan&parse (sllgen:make-string-parser lex-a grammar-let))
@@ -77,7 +78,11 @@
   [proc-exp (var identifier?)
             (body expression?)]
   [call-exp (rator expression?)
-            (rand expression?)])
+            (rand expression?)]
+  [letproc-exp (proc-name identifier?)
+               (args identifier?)
+               (body1 expression?)
+               (body2 expression?)])
 
 (define-datatype proc proc?
   [procedure (var identifier?)
@@ -157,10 +162,17 @@
       (call-exp (rator rand)
                 (let ([proc (expval->proc (value-of rator env))]
                       [arg (value-of rand env)])
-                  (apply-procedure proc arg))))))
+                  (apply-procedure proc arg)))
+      (letproc-exp (proc-name id body1 body2)
+                   (let ([val (proc-val (procedure id body1 env))])
+                     (value-of body2 (extend-env proc-name val env)))))))
 
 (define l1 "-(6, i)")
 (define l2 "let x = 200 in let f = proc (z) -(z, x) in let x = 100 in let g = proc (z) -(z, x) in -((f 1), (g 1))")
+(define l3 "letproc f = (z) -(z, 1) in (f 2)")
+
 (display (run l1))
 (newline)
 (display (run l2))
+(newline)
+(display (run l3))
