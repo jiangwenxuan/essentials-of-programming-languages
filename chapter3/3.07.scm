@@ -73,7 +73,7 @@
     (expression ("/" "(" expression "," expression ")") quotient-exp)
     (expression ("zero?" "(" expression ")") zero?-exp)
     (expression ("if" expression "then" expression "else" expression) if-exp)
-    (expression ("let" identifier expression "in" expression) let-exp)))
+    (expression ("let" identifier "=" expression "in" expression) let-exp)))
 
 (define scan&parse
   (sllgen:make-string-parser lex-let grammar-let))
@@ -154,8 +154,8 @@
                  (value-of body (extend-env id val1 env)))))))
  
 (define s1 "+(i, minus(j))")
-(define s2 "let x 9 in *(x, minus(i))")
-(define s3 "let x 0 in if zero?(0) then minus(8) else minus(i)")
+(define s2 "let x = 9 in *(x, minus(i))")
+(define s3 "let x = 0 in if zero?(0) then minus(8) else minus(i)")
 
 (display (run s1))
 (newline)

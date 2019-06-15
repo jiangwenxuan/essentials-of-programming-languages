@@ -64,7 +64,7 @@
     (expression ("-" "(" expression "," expression ")") diff-exp)
     (expression ("zero?" "(" expression ")") zero?-exp)
     (expression ("if" expression "then" expression "else" expression) if-exp)
-    (expression ("let" identifier expression "in" expression) let-exp)))
+    (expression ("let" identifier "=" expression "in" expression) let-exp)))
 
 (define scan&parse
   (sllgen:make-string-parser lex-let grammar-let))
@@ -128,7 +128,7 @@
 
 
 (define s1 "-(i, minus(j))")
-(define s2 "let x 9 in -(x, minus(k))")
+(define s2 "let x = 9 in -(x, minus(k))")
 
 (display (scan&parse s1))
 (newline)

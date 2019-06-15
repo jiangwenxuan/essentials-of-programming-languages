@@ -70,7 +70,7 @@
     (expression ("/" "(" expression "," expression ")") quotient-exp)
     (expression ("zero?" "(" expression ")") zero?-exp)
     (expression ("if" expression "then" expression "else" expression) if-exp)
-    (expression ("let" identifier expression "in" expression) let-exp)
+    (expression ("let" identifier "=" expression "in" expression) let-exp)
     (expression ("cons" "(" expression "," expression ")") cons-exp)
     (expression ("car" "(" expression ")") car-exp)
     (expression ("cdr" "(" expression ")") cdr-exp)
@@ -295,12 +295,12 @@
 
  
 ;(define s1 "+(i, minus(j))")
-;(define s2 "let x 0 in if zero?(0) then minus(8) else minus(i)")
-;(define s3 "let a 9 in let b 10 in if greater?(a, b) then *(a, b) else -(a, b)") 
-;(define s4 "let x 4 in cons(x, cons(cons(-(x, 1), emptylist), emptylist))")
+;(define s2 "let x = 0 in if zero?(0) then minus(8) else minus(i)")
+;(define s3 "let a = 9 in let b = 10 in if greater?(a, b) then *(a, b) else -(a, b)") 
+;(define s4 "let x = 4 in cons(x, cons(cons(-(x, 1), emptylist), emptylist))")
 ;(define s5 "list(1, 2, 3)")
-;(define s6 "let x 4 in list(x, -(x, 1), -(x, 3))")
-;(define s7 "let x 4 in cond zero?(x) ==> +(x, 1) zero?(-(x, 4)) ==> *(x, 3) end")
+;(define s6 "let x = 4 in list(x, -(x, 1), -(x, 3))")
+;(define s7 "let x = 4 in cond zero?(x) ==> +(x, 1) zero?(-(x, 4)) ==> *(x, 3) end")
 ;
 ;(display (run s1))
 ;(newline)

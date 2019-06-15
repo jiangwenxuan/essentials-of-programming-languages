@@ -4,7 +4,7 @@
 ; 1. diff-exp:  - (x , y)
 ; 2. if-exp: if exp then exp else exp
 ; 3. zero?-exp: zero? (exp)
-; 4. let-exp: let id exp in exp
+; 4. let-exp: let id = exp in exp
 
 
 ; use functional representation to represent env
@@ -68,7 +68,7 @@
     (expression ("-" "(" expression "," expression ")") diff-exp)
     (expression ("zero?" "(" expression ")") zero?-exp)
     (expression ("if" expression "then" expression "else" expression) if-exp)
-    (expression ("let" identifier expression "in" expression) let-exp)))
+    (expression ("let" identifier "=" expression "in" expression) let-exp)))
 
 ;(sllgen:show-define-datatypes lex-a grammar-let)
 (define scan&parse (sllgen:make-string-parser lex-a grammar-let))
