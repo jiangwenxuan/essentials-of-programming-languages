@@ -1,9 +1,9 @@
 #lang eopl
 
-; at first, I can't do this problem
-; then I read how to build Y combinator, know more about ((f f) x)
-; and record it in another github repository: the_little_schemer
-; then I can solve this problem
+; 3.25 is important
+; it tells us why we use Y combinator to build recursive function
+; because proc contains the env without itself
+; then, in the apply-exp, the calculate env don't have the recursive func
 
 (define empty-env '())
 
@@ -197,7 +197,7 @@
       (procedure (vars body saved-env)
                  (value-of body (extend-env-list vars vals saved-env))))))
 
-    
+
 ;(define l1 "-(6, i)")
 ;(define l2 "let x = 200 in let f = proc (z) -(z, x) in let x = 100 in let g = proc (z) -(z, x) in -((f 1), (g 1))")
 ;(define l3 "letproc f = (z) -(z, 1) in (f 2)")
@@ -214,15 +214,52 @@
 ;(newline)
 ;(display (run l5))
 
-(define s1 "let makemult = proc (maker) proc (x) if zero?(x) then 0 else -(((maker maker) -(x, 1)), 4)
-                in let times4 = proc (x) ((makemult makemult) x)
-                       in (times4 3)")
-(define s2 "let makemult = proc (maker) proc (x, y) if zero?(x) then 0 else -(((maker maker) -(x, 1) y), y)
-                in let multi = proc (x, y) ((makemult makemult) x y)
-                   in let makefact = proc (maker) proc (x) if zero?(x) then 1 else (multi x ((maker maker) -(x, 1)))
-                      in let fact = proc (x) ((makefact makefact) x)
-                         in (fact 5)")
+;(define s1 "let makemult = proc (maker) proc (x) if zero?(x) then 0 else -(((maker maker) -(x, 1)), 4)
+;                in let times4 = proc (x) ((makemult makemult) x)
+;                       in (times4 3)")
+;
+;(define s2 "let makemult = proc (maker) proc (x, y) if zero?(x) then 0 else -(((maker maker) -(x, 1) y), y)
+;                in let multi = proc (x, y) ((makemult makemult) x y)
+;                   in let makefact = proc (maker) proc (x) if zero?(x) then 1 else (multi x ((maker maker) -(x, 1)))
+;                      in let fact = proc (x) ((makefact makefact) x)
+;                         in (fact 5)")
 
-(display (run s1))
+;(define s3 "let makeeven = proc (maker) proc (x) if zero?(x) then 1 else if zero?(-(x, 1)) then 0 else ((maker maker) -(x, 1))
+;                in let even = proc (x) ((makeeven makeeven) x)
+;                   in (even 9)")
+;
+;(define s4 "let makeodd = proc (maker) proc (x) if zero?(x) then 0 else if zero?(-(x, 1)) then 1 else ((maker maker) -(x, 2))
+;                in let odd = proc (x) ((makeodd makeodd) x)
+;                   in (odd 8)")
+
+;(display (run s1))
+;(newline)
+;(display (run s2))
+;(newline)
+;(display (run s3))
+;(newline)
+;(display (run s4))
+
+(define Y "let makerec = proc (f)
+                              let d = proc (x)
+                                      proc (z) ((f (x x)) z)
+                                  in proc (n) ((f (d d)) n)
+               in let maketimes4 = proc (f)
+                                        proc (x)
+                                             if zero?(x)
+                                                then 0
+                                                else -((f -(x, 1)), 4)
+                      in let times4 = (makerec maketimes4)
+                             in (times4 3)")
+
+(display (run Y))
 (newline)
-(display (run s2))
+
+; wrong recursive func 
+(define fac "let fac = proc (x)
+                       if zero?(x)
+                          then 0
+                          else -(x, (fac -(x, 1)))
+                 in (fac 4)")
+
+(display (run fac))
