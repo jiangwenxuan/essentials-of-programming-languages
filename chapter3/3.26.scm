@@ -1,9 +1,7 @@
 #lang eopl
 
-; 3.25 is important
-; it tells us why we use Y combinator to build recursive function
-; because proc contains the env without itself
-; then, in the apply-exp, the calculate env don't have the recursive func
+; see Yukang's code
+; wow, I don't know how to solve 3.26
 
 (define empty-env '())
 
@@ -65,7 +63,8 @@
   '((whitespace (whitespace) skip)
     (commit ("%" (arbno (not #\newline))) skip)
     (identifier (letter (arbno (or letter digit))) symbol)
-    (number (digit (arbno digit)) number)))
+    (number (digit (arbno digit)) number)
+    (number ("-" digit (arbno digit)) number)))
 
 (define grammar-let
   '((program (expression) a-program)
@@ -139,6 +138,42 @@
   (lambda (type val)
     (eopl:error "expval's extractor is not suit the exp: ~s" val)))
 
+(define free-variables
+  (lambda (expr bound)
+    (cases expression expr
+      (const-exp (num) '())
+      (var-exp (var)
+               (if (memq var bound)
+                   '()
+                   (list var)))
+      (diff-exp (exp1 exp2)
+                (append (free-variables exp1 bound)
+                        (free-variables exp2 bound)))
+      (zero?-exp (arg)
+                 (free-variables arg bound))
+      (if-exp (pred consq alte)
+              (append (free-variables pred bound)
+                      (free-variables consq bound)
+                      (free-variables alte bound)))
+      (let-exp (var value body)
+               (append (free-variables value bound)
+                       (free-variables body (cons var bound))))
+      (proc-exp (var body)
+                (append (free-variables body (cons var bound))))
+      (call-exp (var body)
+                (append (free-variables var bound)
+                        (free-variables body bound))))))
+
+(define optimize-env
+  (lambda (env frees)
+    (let ([pred (lambda (var)
+                  (if (or (empty-env-record? var)
+                          (memq (car var) frees))
+                      #t
+                      #f))])
+      (filter pred env))))
+                  
+
 (define run
   (lambda (string)
     (value-of-program (scan&parse string))))
@@ -207,7 +242,7 @@
 ;(display (run l1))
 ;(newline)
 ;(display (run l2))
-;(newline)
+;(newline) 
 ;(display (run l3))
 ;(newline)
 ;(display (run l4))
