@@ -2,9 +2,10 @@
 
 (define lex-a
   '((whitespace (whitespace) skip)
-    (commit ("%" (arbno (not #\newline)) skip))
+    (commit ("%" (arbno (not #\newline))) skip)
     (number (digit (arbno digit)) number)
-    (identifier (letter (arbno (or letter number))) symbol)))
+    (number ("-" digit (arbno digit)) number)
+    (identifier (letter (arbno (or letter digit))) symbol)))
 
 (define grammar-letrec
   '((program (expression) a-program)
@@ -16,7 +17,7 @@
     (expression ("let" identifier "=" expression "in" expression) let-exp)
     (expression ("proc" "(" identifier ")" expression) proc-exp)
     (expression ("(" expression expression ")") call-exp)
-    (expression ("letrec" identifie "(" identifier ")" "=" expression "in" expression) letrec-exp)))
+    (expression ("letrec" identifier "(" identifier ")" "=" expression "in" expression) letrec-exp)))
 
 (define scan&parse (sllgen:make-string-parser lex-a grammar-letrec))
 
@@ -85,14 +86,22 @@
                           (proc-val (procedure b-var p-body env))
                           (apply-env saved-env search-var))))))
 
-(define extend-env-rec
-  (lambda (p-name b-var body saved-env)
-    (let ([vec (make-vector 1)])
-      (let ([new-env (extend-env p-name vec saved-env)])
-        (vector-set! vec
-                     0
-                     (proc-val (procedure b-var body new-env)))
-        new-env))))
+(define init-env
+  (lambda ()
+    (empty-env)))
+
+;(define extend-env-rec
+;  (lambda (p-name b-var body saved-env)
+;    (let ([vec (make-vector 1)])
+;      (let ([new-env (extend-env p-name vec saved-env)])
+;        (vector-set! vec
+;                     0
+;                     (proc-val (procedure b-var body new-env)))
+;        new-env))))
+
+(define report-no-binding-found
+  (lambda (search-var)
+    (eopl:error "there is not ~s in environment" search-var)))
 
 (define-datatype expval expval?
   [num-val
@@ -135,7 +144,7 @@
 
 (define value-of
   (lambda (exp env)
-    (cases expression env
+    (cases expression exp
       [const-exp (num) (num-val num)]
       [var-exp (var) (apply-env env var)]
       [diff-exp (exp1 exp2)
@@ -160,7 +169,7 @@
       [proc-exp (var body)
                 (proc-val (procedure var body env))]
       [call-exp (rator rand)
-                (let ([proc (expval->proc rator)]
+                (let ([proc (expval->proc (value-of rator env))]
                       [args (value-of rand env)])
                   (apply-procedure proc args))]
       [letrec-exp (p-name b-var p-body letrec-body)
@@ -168,30 +177,14 @@
                             (extend-env-rec p-name b-var p-body env))])))
 
 (define apply-procedure
-  (lambda (proc1 val)
+  (lambda (proc1 arg)
     (cases proc proc1
       (procedure (var body env)
-                 (value-of body (extend-env var var env))))))
+                 (value-of body (extend-env var arg env))))))
 
+(define l1 "letrec double (x) = if zero?(x)
+                                   then 0
+                                   else -((double -(x, 1)), -2)
+                   in (double 6)")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
+(display (run l1))
