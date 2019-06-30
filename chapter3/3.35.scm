@@ -1,12 +1,7 @@
 #lang eopl
 
-(define list-of
-  (lambda (pred)
-    (lambda (x)
-      (or (null? x)
-          (and (pair? x)
-               (pred (car x))
-               ((list-of pred) (cdr x)))))))
+; the same as ch3-base-letrec-language-data-structure-representation.scm
+; with side effect
 
 (define lex-a
   '((whitespace (whitespace) skip)
@@ -25,7 +20,7 @@
     (expression ("let" identifier "=" expression "in" expression) let-exp)
     (expression ("proc" "(" identifier ")" expression) proc-exp)
     (expression ("(" expression expression ")") call-exp)
-    (expression ("letrec" (arbno identifier "(" identifier ")" "=" expression) "in" expression) letrec-exp)))
+    (expression ("letrec" identifier "(" identifier ")" "=" expression "in" expression) letrec-exp)))
 
 (define scan&parse (sllgen:make-string-parser lex-a grammar-letrec))
 
@@ -57,9 +52,9 @@
    (rator expression?)
    (rand expression?)]
   [letrec-exp
-   (p-names (list-of symbol?))
-   (b-vars (list-of symbol?))
-   (p-bodys (list-of expression?))
+   (p-name symbol?)
+   (b-var symbol?)
+   (p-body expression?)
    (letrec-body expression?)])
 
 (define-datatype proc proc?
@@ -68,48 +63,39 @@
    (body expression?)
    (env environment?)])
 
-(define environment? procedure?)
+(define environment? pair?)
 
-(define empty-env
-  (lambda ()
-    (lambda (search-var)
-      (report-no-binding-found search-var))))
+(define empty-env '())
+
+(define empty-env? null?)
 
 (define extend-env
   (lambda (saved-var saved-val saved-env)
-    (lambda (search-var)
-      (if (eqv? search-var saved-var)
-          saved-val
-          (apply-env saved-env search-var)))))
-
-(define extend-env-rec
-  (lambda (p-names b-vars p-bodys saved-env)
-    (define env-rec
-      (lambda (x)
-        (let ([m (find-rec p-names b-vars p-bodys x)])
-          (if (pair? m)
-              (proc-val (procedure (car m) (cdr m) env-rec))
-              (apply-env saved-env x)))))
-    (lambda (search-var)
-      (env-rec search-var))))
-
-(define find-rec
-  (lambda (p-names b-vars p-bodys x)
-    (cond
-      [(null? p-names)
-       #f]
-      [(eqv? x (car p-names))
-       (cons (car b-vars) (car p-bodys))]
-      [else
-       (find-rec (cdr p-names) (cdr b-vars) (cdr p-bodys) x)])))
-
-(define apply-env
-  (lambda (env search-var)
-    (env search-var)))
+    (cons (cons saved-var saved-val) saved-env)))
 
 (define init-env
   (lambda ()
-    (empty-env)))
+    (extend-env 'a (num-val 1) empty-env)))
+
+(define extend-env-rec
+  (lambda (p-name b-var body saved-env)
+    (let ([vec (make-vector 1)])
+      (let ([new-env (extend-env p-name vec saved-env)])
+        (vector-set! vec
+                     0
+                     (proc-val (procedure b-var body new-env)))
+        new-env))))
+
+(define apply-env
+  (lambda (env search-var)
+    (cond
+      [(empty-env? env) (report-no-binding-found search-var)]
+      [(eqv? (caar env) search-var)
+       (if (vector? (cdar env))
+           (vector-ref (cdar env) 0)
+           (cdar env))]
+      [else
+       (apply-env (cdr env) search-var)])))
 
 (define report-no-binding-found
   (lambda (search-var)
@@ -184,9 +170,9 @@
                 (let ([proc (expval->proc (value-of rator env))]
                       [args (value-of rand env)])
                   (apply-procedure proc args))]
-      [letrec-exp (p-names b-vars p-bodys letrec-body)
+      [letrec-exp (p-name b-var p-body letrec-body)
                   (value-of letrec-body
-                            (extend-env-rec p-names b-vars p-bodys env))])))
+                            (extend-env-rec p-name b-var p-body env))])))
 
 (define apply-procedure
   (lambda (proc1 arg)
@@ -199,10 +185,4 @@
                                    else -((double -(x, 1)), -2)
                    in (double 6)")
 
-(define l2 "letrec odd (x) = if zero?(x) then 0 else (even -(x, 1))
-                   even (x) = if zero?(x) then 1 else (odd -(x, 1))
-                   in (odd 13)")
-
 (display (run l1))
-(newline)
-(display (run l2))
