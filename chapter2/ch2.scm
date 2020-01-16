@@ -8,7 +8,7 @@
 ;(define successor (lambda (n) (cons #t n)))
 ;(define predecessor (lambda (n) (cdr n)))
 
-; scheme number representation:
+; scheme number representation
 ; four interface
 (define zero (lambda () 0))
 (define is-zero? (lambda (n) (zero? n)))

@@ -1,4 +1,4 @@
-#lang racket
+#lang eopl
 
 (define in-S?
   (lambda (n)
@@ -10,7 +10,7 @@
 (define list-length
   (lambda (lst)
     (if (null? lst)
-        0
+        0ss
         (+ 1 (list-length (cdr lst))))))
 
 (define nth-element
@@ -20,10 +20,10 @@
         (if (zero? n)
             (car lst)
             (nth-element (cdr lst) (- n 1))))))
-;(define report-list-too-short
-;  (lambda (n)
-;    (eopl:error 'nth-element
-;                "list too short by ~s elements.~%" (+ n 1))))
+(define report-list-too-short
+  (lambda (n)
+    (eopl:error 'nth-element
+                "list too short by ~s elements.~%" (+ n 1))))
 
 (define remove-first
   (lambda (s los)
@@ -69,7 +69,7 @@
               (number-element-from (cdr lst) (+ n 1))))))
 (define number-elements
   (lambda (lst)
-    (number-elements-from lst 0)))
+    (number-element-from lst 0)))
 
 (define list-sum
   (lambda (loi)
