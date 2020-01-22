@@ -29,7 +29,7 @@
     (expression ("proc" "(" identifier ")" expression) proc-exp)
     (expression ("(" expression expression ")") call-exp)
     (expression ("letrec" (arbno identifier "(" identifier ")" "=" expression) "in" expression) letrec-exp)
-    (expression ("begin" expression (arbno ";" expression) "end") bend-exp)
+    (expression ("begin" expression (arbno ";" expression) "end") begin-exp)
     (expression ("newref" "(" expression ")") newref-exp)
     (expression ("deref" "(" expression ")") deref-exp)
     (expression ("setref" "(" expression "," expression ")") setref-exp)))
@@ -68,7 +68,7 @@
    (b-var (list-of symbol?))
    (p-body (list-of expression?))
    (letrec-body expression?))
-  (bend-exp
+  (begin-exp
    (exp1 expression?)
    (exps (list-of expression?)))
   (newref-exp
@@ -132,14 +132,8 @@
 (define empty-env? null?)
 
 (define extend-env
-  (lambda (saved-vars saved-vals saved-env)
-    (cond
-      [(null? saved-vars) saved-env]
-      [(not (pair? saved-vars)) (cons (cons saved-vars saved-vals) saved-env)]
-      [else
-       (cons (cons (car saved-vars) (car saved-vals))
-             (extend-env (cdr saved-vars) (cdr saved-vals) saved-env))])))
-
+  (lambda (saved-var saved-val saved-env)
+    (cons (cons saved-var saved-val) saved-env)))
 
 (define extend-env-rec
   (lambda (p-names b-vars bodys saved-env)
@@ -161,7 +155,6 @@
         (begin
           (vector-set! (cdar env) 0 (proc-val (procedure (car b-vars) (car bodys) pointer)))
           (modify-env (cdr p-names) (cdr b-vars) (cdr bodys) pointer (cdr env))))))
-
 
 (define apply-env
   (lambda (env search-var)
@@ -229,25 +222,17 @@
     (eopl:error "there isn't ~s" ref)))
 
 (define apply-procedure
-  (lambda (proc1 args)
+  (lambda (proc1 arg)
     (cases proc proc1
       (procedure (var body env)
-                 (value-of body (extend-env var args env))))))
-
-(define args-cal
-  (lambda (rands env)
-    (if (not (pair? rands))
-        (cons (value-of rands env) '())
-        (if (null? rands)
-            '()
-            (cons (value-of (car rands) env)
-                  (args-cal (cdr rands) env))))))
+                 (value-of body (extend-env var arg env))))))
 
 (define value-of-exps
   (lambda (exp1 exps env)
-    (if (null? exps)
-        (value-of exp1 env)
-        (value-of-more-exp exps env))))
+    (let ((v1 (value-of exp1 env)))
+      (if (null? exps)
+          v1
+          (value-of-exps (car exps) (cdr exps) env)))))
 
 (define value-of-more-exp
   (lambda (exps env)
@@ -298,15 +283,15 @@
                  (value-of body (extend-env var val1 env))))
       (proc-exp (var body)
                 (proc-val (procedure var body env)))
-      (call-exp (rator rands)
+      (call-exp (rator rand)
                 (let ([proc (expval->proc (value-of rator env))]
-                      [args (args-cal rands env)])
-                  (apply-procedure proc args)))
+                      [arg (value-of rand env)])
+                  (apply-procedure proc arg)))
       (letrec-exp (p-names b-vars p-bodys letrec-body)
                   (value-of letrec-body
                             (extend-env-rec p-names b-vars p-bodys env)))
-      (bend-exp (exp1 exps)
-                (value-of-exps exp1 exps env))
+      (begin-exp (exp1 exps)
+                 (value-of-exps exp1 exps env))
       (newref-exp (exp1)
                   (let ((v1 (value-of exp1 env)))
                     (ref-val (newref v1))))
@@ -335,7 +320,7 @@
                                             setref(x, -(deref(x),1));
                                             (even 888)
                                             end
-                          in begin setref(x,13);
+                          in begin setref(x,9);
                                    (odd 888)
                              end")
 
