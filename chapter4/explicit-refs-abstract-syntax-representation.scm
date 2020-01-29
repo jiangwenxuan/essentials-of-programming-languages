@@ -171,7 +171,7 @@
             (setref-inner the-store ref)))))
 
 (define report-invalid-reference
-  (lambda (ref l)
+  (lambda (ref)
     (eopl:error "there isn't ~s" ref)))
 
 (define apply-procedure
