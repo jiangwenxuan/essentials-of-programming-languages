@@ -1,7 +1,5 @@
 #lang eopl
 
-; this program is not correct, I will check it later
-
 (define list-of
   (lambda (pred)
     (lambda (x)
@@ -320,7 +318,7 @@
                                             setref(x, -(deref(x),1));
                                             (even 888)
                                             end
-                          in begin setref(x,9);
+                          in begin setref(x,8);
                                    (odd 888)
                              end")
 
